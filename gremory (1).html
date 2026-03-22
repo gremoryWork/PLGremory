@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gremory — Калькулятор Playerok</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --bg2: #111111;
+    --bg3: #181818;
+    --card: #141414;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0f0f0;
+    --text2: #888;
+    --text3: #555;
+    --accent: #ffffff;
+    --accent-dim: rgba(255,255,255,0.08);
+    --green: #22c55e;
+    --green-dim: rgba(34,197,94,0.1);
+    --red: #ef4444;
+    --red-dim: rgba(239,68,68,0.1);
+    --yellow: #eab308;
+    --yellow-dim: rgba(234,179,8,0.1);
+    --blue: #3b82f6;
+    --blue-dim: rgba(59,130,246,0.1);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
+
+  .logo span {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+    margin-left: 4px;
+    vertical-align: middle;
+    position: relative;
+    top: -2px;
+  }
+
+  .usdt-ticker {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  .ticker-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .ticker-label { color: var(--text2); }
+  .ticker-val { color: #fff; font-weight: 500; }
+  .ticker-rec { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+  .ticker-rec.good { background: var(--green-dim); color: var(--green); }
+  .ticker-rec.bad { background: var(--red-dim); color: var(--red); }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 20px;
+  }
+
+  /* INPUT ROW */
+  .input-group {
+    margin-bottom: 32px;
+  }
+
+  .input-label {
+    display: block;
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .input-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    max-width: 340px;
+  }
+
+  .input-wrap input {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 20px;
+    font-weight: 500;
+    padding: 14px 50px 14px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .input-wrap input:focus { border-color: rgba(255,255,255,0.3); }
+  .input-wrap input::placeholder { color: var(--text3); font-size: 16px; }
+
+  .input-suffix {
+    position: absolute;
+    right: 14px;
+    color: var(--text2);
+    font-size: 14px;
+    font-weight: 500;
+    pointer-events: none;
+  }
+
+  /* CARDS GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  @media (max-width: 620px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: var(--border2); }
+
+  .card-label {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text3);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .card-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.1;
+  }
+
+  .card-val.green { color: var(--green); }
+  .card-val.red { color: var(--red); }
+  .card-val.yellow { color: var(--yellow); }
+  .card-val.blue { color: var(--blue); }
+
+  .card-sub {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 6px;
+  }
+
+  .card-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+    margin-top: 8px;
+  }
+
+  .badge-green { background: var(--green-dim); color: var(--green); }
+  .badge-red { background: var(--red-dim); color: var(--red); }
+  .badge-yellow { background: var(--yellow-dim); color: var(--yellow); }
+  .badge-blue { background: var(--blue-dim); color: var(--blue); }
+  .badge-gray { background: rgba(255,255,255,0.05); color: var(--text2); }
+
+  /* WITHDRAWAL SECTION */
+  .section-block {
+    margin-bottom: 48px;
+  }
+
+  .method-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .tab-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 18px;
+    border-radius: 40px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab-btn.active, .tab-btn:hover {
+    background: var(--accent-dim);
+    border-color: var(--border2);
+    color: #fff;
+  }
+
+  /* BOOST TABLE */
+  .boost-section { margin-bottom: 48px; }
+
+  .boost-controls {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .boost-controls .input-wrap { max-width: 200px; }
+  .boost-controls .input-wrap input { font-size: 18px; padding: 12px 50px 12px 14px; }
+
+  .commission-select {
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 12px 16px;
+    outline: none;
+    cursor: pointer;
+    min-width: 150px;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+
+  .boosts-input-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .boost-mini-label {
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  .boost-mini-group { display: flex; flex-direction: column; }
+
+  .boost-mini-input {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 10px 14px;
+    outline: none;
+    width: 90px;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+
+  .boost-mini-input:focus { border-color: var(--border2); }
+
+  /* BOOST TABLE */
+  .boost-table-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .boost-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .boost-table th {
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text3);
+    font-weight: 600;
+    padding: 14px 20px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg3);
+  }
+
+  .boost-table td {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: middle;
+  }
+
+  .boost-table tr:last-child td { border-bottom: none; }
+  .boost-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .boost-range { color: var(--text2); font-size: 13px; }
+  .boost-price { font-weight: 600; color: var(--text); }
+  .boost-total { font-weight: 700; font-family: 'Syne', sans-serif; }
+  .boost-total.highlighted { color: var(--yellow); }
+
+  .boost-qty-cell { display: flex; align-items: center; gap: 8px; }
+  .qty-btn {
+    width: 26px; height: 26px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+    line-height: 1;
+  }
+  .qty-btn:hover { background: var(--border); }
+  .qty-val { min-width: 28px; text-align: center; font-weight: 500; }
+
+  /* PROFIT SUMMARY */
+  .profit-card {
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .profit-card::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(34,197,94,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .profit-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text2);
+    margin-bottom: 24px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .profit-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+
+  .profit-row:last-child { border-bottom: none; }
+  .profit-row .name { color: var(--text2); }
+  .profit-row .amount { font-weight: 600; color: var(--text); }
+  .profit-row .amount.neg { color: var(--red); }
+  .profit-row .amount.pos { color: var(--green); }
+  .profit-row .amount.big {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--green);
+  }
+  .profit-row .amount.big.loss { color: var(--red); }
+
+  .profit-final {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0 0;
+    margin-top: 4px;
+  }
+
+  .profit-final .name {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text2);
+  }
+
+  /* WARNINGS */
+  .warning-block {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--yellow-dim);
+    border: 1px solid rgba(234,179,8,0.15);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--yellow);
+    margin-top: 12px;
+  }
+
+  .error-block {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--red-dim);
+    border: 1px solid rgba(239,68,68,0.15);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--red);
+    margin-top: 12px;
+  }
+
+  .success-block {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--green-dim);
+    border: 1px solid rgba(34,197,94,0.15);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--green);
+    margin-top: 12px;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 40px 0;
+  }
+
+  /* USDT comparison */
+  .compare-row {
+    display: flex;
+    gap: 14px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .compare-item {
+    flex: 1;
+    min-width: 160px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+  }
+
+  .compare-item .method { font-size: 12px; color: var(--text3); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+  .compare-item .fee-val { font-size: 20px; font-weight: 700; color: #fff; }
+  .compare-item .fee-desc { font-size: 12px; color: var(--text2); margin-top: 4px; }
+  .compare-item.winner { border-color: var(--green); background: rgba(34,197,94,0.04); }
+
+  /* RESPONSIVE */
+  @media (max-width: 500px) {
+    .boost-table th, .boost-table td { padding: 10px 12px; font-size: 13px; }
+    .card-val { font-size: 22px; }
+    header { flex-direction: column; align-items: flex-start; gap: 16px; }
+  }
+
+  /* ANIMATIONS */
+  .card, .profit-card, .boost-table-wrap {
+    animation: fadeUp 0.3s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hidden { display: none; }
+
+  /* number flash */
+  @keyframes numFlash {
+    0% { opacity: 0.4; }
+    100% { opacity: 1; }
+  }
+  .flash { animation: numFlash 0.25s ease; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">Gremory<span></span></div>
+    <div class="usdt-ticker">
+      <div class="ticker-dot"></div>
+      <span class="ticker-label">USDT/RUB</span>
+      <span class="ticker-val" id="usdtRate">—</span>
+      <span class="ticker-rec" id="usdtRec">загрузка...</span>
+    </div>
+  </header>
+
+  <!-- MAIN AMOUNT INPUT -->
+  <div class="section-block">
+    <div class="section-title">Основные данные</div>
+    <div style="display:flex; gap:24px; flex-wrap:wrap; align-items:flex-start;">
+      <div class="input-group" style="margin-bottom:0">
+        <label class="input-label">Сумма продажи товара</label>
+        <div class="input-wrap">
+          <input type="number" id="saleAmount" placeholder="10 000" min="0" oninput="calc()">
+          <span class="input-suffix">₽</span>
+        </div>
+      </div>
+      <div class="input-group" style="margin-bottom:0">
+        <label class="input-label">Затраты на товар (себестоимость)</label>
+        <div class="input-wrap">
+          <input type="number" id="costAmount" placeholder="5 000" min="0" oninput="calc()">
+          <span class="input-suffix">₽</span>
+        </div>
+      </div>
+      <div>
+        <label class="input-label">Комиссия Playerok</label>
+        <select class="commission-select" id="playerokFee" onchange="calc()">
+          <option value="10">10%</option>
+          <option value="20">20%</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- SALE OVERVIEW -->
+  <div class="section-block">
+    <div class="section-title">Обзор сделки</div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-label">Сумма продажи</div>
+        <div class="card-val" id="ov-sale">0 ₽</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Комиссия Playerok</div>
+        <div class="card-val red" id="ov-pfee">0 ₽</div>
+        <div class="card-sub" id="ov-pfee-pct">—</div>
+      </div>
+      <div class="card">
+        <div class="card-label">На руки (до вывода)</div>
+        <div class="card-val blue" id="ov-net">0 ₽</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- WITHDRAWAL -->
+  <div class="section-block">
+    <div class="section-title">Комиссия на вывод</div>
+
+    <div class="method-tabs">
+      <button class="tab-btn active" onclick="setTab('sbp', this)">СБП</button>
+      <button class="tab-btn" onclick="setTab('usdt', this)">USDT (TRC20)</button>
+      <button class="tab-btn" onclick="setTab('both', this)">Сравнение</button>
+    </div>
+
+    <!-- SBP TAB -->
+    <div id="tab-sbp">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-label">Комиссия вывода СБП</div>
+          <div class="card-val red" id="sbp-fee">0 ₽</div>
+          <div class="card-sub">6%, мин. 60 ₽ · диапазон 500–79 000 ₽</div>
+          <div id="sbp-badge" class="card-badge badge-gray" style="margin-top:10px">—</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Получите на счёт</div>
+          <div class="card-val green" id="sbp-payout">0 ₽</div>
+          <div class="card-sub">После комиссии вывода</div>
+        </div>
+      </div>
+      <div id="sbp-warning"></div>
+    </div>
+
+    <!-- USDT TAB -->
+    <div id="tab-usdt" class="hidden">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-label">Комиссия вывода USDT</div>
+          <div class="card-val red" id="usdt-fee">0 ₽</div>
+          <div class="card-sub">4% + 1 USDT · диапазон 1 000–700 000 ₽</div>
+          <div id="usdt-badge" class="card-badge badge-gray" style="margin-top:10px">—</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Получите (USDT)</div>
+          <div class="card-val green" id="usdt-payout">0 USDT</div>
+          <div class="card-sub" id="usdt-payout-rub">≈ 0 ₽</div>
+        </div>
+      </div>
+      <div id="usdt-rate-block" class="success-block" style="margin-top:16px">
+        <span>📊</span>
+        <div>
+          <div style="font-weight:600; margin-bottom:2px">Курс USDT/RUB: <span id="usdt-rate-inline">—</span></div>
+          <div id="usdt-recommendation">Загрузка данных о курсе...</div>
+        </div>
+      </div>
+      <div id="usdt-warning"></div>
+    </div>
+
+    <!-- BOTH TAB -->
+    <div id="tab-both" class="hidden">
+      <div class="compare-row">
+        <div class="compare-item" id="cmp-sbp">
+          <div class="method">СБП</div>
+          <div class="fee-val" id="cmp-sbp-val">0 ₽</div>
+          <div class="fee-desc" id="cmp-sbp-get">Получите: 0 ₽</div>
+        </div>
+        <div class="compare-item" id="cmp-usdt">
+          <div class="method">USDT TRC20</div>
+          <div class="fee-val" id="cmp-usdt-val">0 ₽</div>
+          <div class="fee-desc" id="cmp-usdt-get">Получите: 0 USDT ≈ 0 ₽</div>
+        </div>
+      </div>
+      <div id="cmp-verdict" class="success-block" style="margin-top:12px; display:none">
+        <span>✓</span>
+        <span id="cmp-verdict-text"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- BOOST SECTION -->
+  <div class="boost-section">
+    <div class="section-title">Поднятие товара</div>
+
+    <div class="boost-controls">
+      <div>
+        <label class="input-label">Комиссия Playerok</label>
+        <select class="commission-select" id="boostFeeType" onchange="calcBoost()">
+          <option value="10">10%</option>
+          <option value="20">20%</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="boost-table-wrap">
+      <table class="boost-table">
+        <thead>
+          <tr>
+            <th>Диапазон цены</th>
+            <th>Премиум статус</th>
+            <th>Топ-1</th>
+            <th>Кол-во поднятий</th>
+            <th>Итого</th>
+          </tr>
+        </thead>
+        <tbody id="boostTable"></tbody>
+      </table>
+    </div>
+
+    <div class="grid-2" style="margin-top:20px">
+      <div class="card">
+        <div class="card-label">Итого на поднятия</div>
+        <div class="card-val yellow" id="boost-total-sum">0 ₽</div>
+        <div class="card-sub" id="boost-total-desc">—</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Автоматически из суммы</div>
+        <div class="card-val" id="boost-auto-range">—</div>
+        <div class="card-sub" id="boost-auto-desc">Основано на сумме продажи</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- PROFIT SUMMARY -->
+  <div class="section-block">
+    <div class="section-title">Итоговый расчёт</div>
+
+    <div class="profit-card">
+      <div class="profit-title">Чистый доход</div>
+
+      <div class="profit-row">
+        <span class="name">Сумма продажи</span>
+        <span class="amount" id="sum-sale">0 ₽</span>
+      </div>
+      <div class="profit-row">
+        <span class="name">— Комиссия Playerok</span>
+        <span class="amount neg" id="sum-pfee">0 ₽</span>
+      </div>
+      <div class="profit-row">
+        <span class="name">— Комиссия вывода</span>
+        <span class="amount neg" id="sum-wfee">0 ₽</span>
+      </div>
+      <div class="profit-row">
+        <span class="name" id="sum-wmethod-label">Метод вывода</span>
+        <span class="amount" id="sum-wmethod">СБП</span>
+      </div>
+      <div class="profit-row">
+        <span class="name">— Поднятия (общая сумма)</span>
+        <span class="amount neg" id="sum-boosts">0 ₽</span>
+      </div>
+      <div class="profit-row">
+        <span class="name">— Себестоимость товара</span>
+        <span class="amount neg" id="sum-cost">0 ₽</span>
+      </div>
+      <div class="profit-final">
+        <span class="name">Чистый доход</span>
+        <span class="amount big" id="sum-profit">0 ₽</span>
+      </div>
+      <div id="profit-margin-row" style="display:flex; justify-content:flex-end; margin-top:8px">
+        <span class="card-badge" id="profit-margin-badge">—</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const BOOST_DATA = [
+  { range: '90–499 ₽',   min: 90,    max: 499,   prem10: 19, prem20: 25, top10: 9,  top20: 13 },
+  { range: '500–999 ₽',  min: 500,   max: 999,   prem10: 25, prem20: 37, top10: 13, top20: 19 },
+  { range: '1 000–2 499 ₽', min: 1000, max: 2499, prem10: 37, prem20: 49, top10: 19, top20: 25 },
+  { range: '2 500–4 999 ₽', min: 2500, max: 4999, prem10: 49, prem20: 75, top10: 25, top20: 37 },
+  { range: '5 000–9 999 ₽', min: 5000, max: 9999, prem10: 75, prem20: 99, top10: 37, top20: 49 },
+  { range: '10 000+ ₽',  min: 10000, max: Infinity, prem10: 99, prem20: 149, top10: 49, top20: 75 },
+];
+
+let usdtRate = 82.81;
+let boostQtys = {};
+
+function fmt(n) {
+  if (isNaN(n) || n === null) return '—';
+  return n.toLocaleString('ru-RU', { maximumFractionDigits: 0 }) + ' ₽';
+}
+
+function fmtUsdt(n) {
+  return n.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USDT';
+}
+
+function setEl(id, val) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = val;
+  el.classList.remove('flash');
+  void el.offsetWidth;
+  el.classList.add('flash');
+}
+
+async function fetchRate() {
+  try {
+    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=rub');
+    const d = await r.json();
+    usdtRate = d.tether.rub;
+  } catch {
+    usdtRate = 82.81;
+  }
+  const rateEl = document.getElementById('usdtRate');
+  rateEl.textContent = usdtRate.toFixed(2) + ' ₽';
+  document.getElementById('usdt-rate-inline').textContent = usdtRate.toFixed(2) + ' ₽';
+  updateUsdtRecommendation();
+  calc();
+}
+
+function updateUsdtRecommendation() {
+  const recEl = document.getElementById('usdtRec');
+  const blockEl = document.getElementById('usdt-rate-block');
+  const recTextEl = document.getElementById('usdt-recommendation');
+
+  const BASE_RATE = 80;
+  const diff = ((usdtRate - BASE_RATE) / BASE_RATE * 100).toFixed(1);
+
+  if (usdtRate >= 83) {
+    recEl.className = 'ticker-rec good';
+    recEl.textContent = 'Выгодно';
+    blockEl.className = 'success-block';
+    recTextEl.textContent = `Курс ${usdtRate.toFixed(2)} ₽ — выгодно выводить в USDT. USDT дорогой, вы получите больше рублей при обмене.`;
+  } else if (usdtRate >= 78) {
+    recEl.className = 'ticker-rec bad';
+    recEl.style.background = 'rgba(234,179,8,0.15)';
+    recEl.style.color = '#eab308';
+    recEl.textContent = 'Умеренно';
+    blockEl.className = 'warning-block';
+    recTextEl.textContent = `Курс ${usdtRate.toFixed(2)} ₽ — умеренный. Выводить в USDT нейтрально, сравните комиссии.`;
+  } else {
+    recEl.className = 'ticker-rec bad';
+    recEl.textContent = 'Невыгодно';
+    blockEl.className = 'error-block';
+    recTextEl.textContent = `Курс ${usdtRate.toFixed(2)} ₽ — невыгодно. Рассмотрите СБП для вывода.`;
+  }
+}
+
+function calcSBP(amount) {
+  if (amount < 500 || amount > 79000) return null;
+  return Math.max(Math.round(amount * 0.06), 60);
+}
+
+function calcUSDT(amount) {
+  if (amount < 1000 || amount > 700000) return null;
+  const feeRub = amount * 0.04 + usdtRate;
+  const payoutRub = amount - feeRub;
+  const payoutUsdt = payoutRub / usdtRate;
+  return { feeRub: Math.round(feeRub), payoutRub: Math.round(payoutRub), payoutUsdt };
+}
+
+function getBoostRange(amount) {
+  for (const b of BOOST_DATA) {
+    if (amount >= b.min && amount <= b.max) return b;
+  }
+  return null;
+}
+
+let currentTab = 'sbp';
+
+function setTab(tab, btn) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-sbp').classList.toggle('hidden', tab !== 'sbp');
+  document.getElementById('tab-usdt').classList.toggle('hidden', tab !== 'usdt');
+  document.getElementById('tab-both').classList.toggle('hidden', tab !== 'both');
+  calc();
+}
+
+function buildBoostTable() {
+  const feeType = document.getElementById('boostFeeType').value;
+  const tbody = document.getElementById('boostTable');
+  tbody.innerHTML = '';
+
+  BOOST_DATA.forEach((row, i) => {
+    const premPrice = feeType === '10' ? row.prem10 : row.prem20;
+    const topPrice = feeType === '10' ? row.top10 : row.top20;
+    const key = `row_${i}`;
+    if (!boostQtys[key]) boostQtys[key] = { prem: 0, top: 0 };
+
+    const premQty = boostQtys[key].prem;
+    const topQty = boostQtys[key].top;
+    const total = premQty * premPrice + topQty * topPrice;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="boost-range">${row.range}</td>
+      <td class="boost-price">${premPrice} ₽</td>
+      <td class="boost-price">${topPrice} ₽</td>
+      <td>
+        <div style="display:flex; gap:20px; flex-wrap:wrap;">
+          <div>
+            <div style="font-size:11px; color:var(--text3); margin-bottom:4px;">Премиум</div>
+            <div class="boost-qty-cell">
+              <button class="qty-btn" onclick="changeQty(${i},'prem',-1)">−</button>
+              <span class="qty-val" id="qty_prem_${i}">${premQty}</span>
+              <button class="qty-btn" onclick="changeQty(${i},'prem',1)">+</button>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:11px; color:var(--text3); margin-bottom:4px;">Топ-1</div>
+            <div class="boost-qty-cell">
+              <button class="qty-btn" onclick="changeQty(${i},'top',-1)">−</button>
+              <span class="qty-val" id="qty_top_${i}">${topQty}</span>
+              <button class="qty-btn" onclick="changeQty(${i},'top',1)">+</button>
+            </div>
+          </div>
+        </div>
+      </td>
+      <td class="boost-total ${total > 0 ? 'highlighted' : ''}" id="boostRowTotal_${i}">${total > 0 ? total + ' ₽' : '—'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  updateBoostTotals();
+}
+
+function changeQty(rowIdx, type, delta) {
+  const key = `row_${rowIdx}`;
+  if (!boostQtys[key]) boostQtys[key] = { prem: 0, top: 0 };
+  boostQtys[key][type] = Math.max(0, (boostQtys[key][type] || 0) + delta);
+  buildBoostTable();
+  calc();
+}
+
+function calcBoost() {
+  buildBoostTable();
+  calc();
+}
+
+function getBoostTotalCost() {
+  const feeType = document.getElementById('boostFeeType').value;
+  let total = 0;
+  BOOST_DATA.forEach((row, i) => {
+    const key = `row_${i}`;
+    if (!boostQtys[key]) return;
+    const premPrice = feeType === '10' ? row.prem10 : row.prem20;
+    const topPrice = feeType === '10' ? row.top10 : row.top20;
+    total += (boostQtys[key].prem || 0) * premPrice + (boostQtys[key].top || 0) * topPrice;
+  });
+  return total;
+}
+
+function updateBoostTotals() {
+  const total = getBoostTotalCost();
+  const totalEl = document.getElementById('boost-total-sum');
+  totalEl.textContent = total > 0 ? fmt(total) : '0 ₽';
+
+  const desc = [];
+  BOOST_DATA.forEach((row, i) => {
+    const key = `row_${i}`;
+    if (!boostQtys[key]) return;
+    const p = boostQtys[key].prem || 0;
+    const t = boostQtys[key].top || 0;
+    if (p > 0) desc.push(`${p}× Премиум (${row.range})`);
+    if (t > 0) desc.push(`${t}× Топ-1 (${row.range})`);
+  });
+  document.getElementById('boost-total-desc').textContent = desc.length ? desc.join(', ') : 'Нет поднятий';
+}
+
+function calc() {
+  const sale = parseFloat(document.getElementById('saleAmount').value) || 0;
+  const cost = parseFloat(document.getElementById('costAmount').value) || 0;
+  const playerokFee = parseInt(document.getElementById('playerokFee').value);
+  const boostFeeType = document.getElementById('boostFeeType').value;
+
+  // Sync commission select with main
+  document.getElementById('boostFeeType').value = playerokFee.toString();
+
+  const pfee = Math.round(sale * playerokFee / 100);
+  const netAfterPlayerok = sale - pfee;
+
+  setEl('ov-sale', fmt(sale));
+  setEl('ov-pfee', fmt(pfee));
+  document.getElementById('ov-pfee-pct').textContent = `${playerokFee}% от суммы`;
+  setEl('ov-net', fmt(netAfterPlayerok));
+
+  // SBP
+  const sbpFee = calcSBP(netAfterPlayerok);
+  let sbpPayout = 0;
+  if (sbpFee !== null) {
+    sbpPayout = netAfterPlayerok - sbpFee;
+    setEl('sbp-fee', fmt(sbpFee));
+    setEl('sbp-payout', fmt(sbpPayout));
+    const badge = document.getElementById('sbp-badge');
+    badge.className = 'card-badge badge-green';
+    badge.textContent = '✓ В диапазоне';
+    document.getElementById('sbp-warning').innerHTML = '';
+  } else {
+    setEl('sbp-fee', '—');
+    setEl('sbp-payout', '—');
+    const badge = document.getElementById('sbp-badge');
+    badge.className = 'card-badge badge-red';
+    badge.textContent = '✕ Вне диапазона';
+    const w = document.getElementById('sbp-warning');
+    if (netAfterPlayerok < 500) {
+      w.innerHTML = `<div class="error-block"><span>⚠</span><span>Сумма после комиссии Playerok (${fmt(netAfterPlayerok)}) меньше минимума 500 ₽ для СБП вывода.</span></div>`;
+    } else if (netAfterPlayerok > 79000) {
+      w.innerHTML = `<div class="warning-block"><span>⚠</span><span>Сумма ${fmt(netAfterPlayerok)} превышает лимит 79 000 ₽ для одного вывода через СБП.</span></div>`;
+    } else {
+      w.innerHTML = '';
+    }
+  }
+
+  // USDT
+  const usdtResult = calcUSDT(netAfterPlayerok);
+  let usdtFeeRub = 0, usdtPayoutRub = 0, usdtPayoutUsdt = 0;
+  if (usdtResult) {
+    usdtFeeRub = usdtResult.feeRub;
+    usdtPayoutRub = usdtResult.payoutRub;
+    usdtPayoutUsdt = usdtResult.payoutUsdt;
+    setEl('usdt-fee', fmt(usdtFeeRub));
+    setEl('usdt-payout', fmtUsdt(usdtPayoutUsdt));
+    document.getElementById('usdt-payout-rub').textContent = '≈ ' + fmt(usdtPayoutRub);
+    const badge = document.getElementById('usdt-badge');
+    badge.className = 'card-badge badge-green';
+    badge.textContent = '✓ В диапазоне';
+    document.getElementById('usdt-warning').innerHTML = '';
+  } else {
+    setEl('usdt-fee', '—');
+    setEl('usdt-payout', '—');
+    document.getElementById('usdt-payout-rub').textContent = '';
+    const badge = document.getElementById('usdt-badge');
+    badge.className = 'card-badge badge-red';
+    badge.textContent = '✕ Вне диапазона';
+    const w = document.getElementById('usdt-warning');
+    if (netAfterPlayerok < 1000) {
+      w.innerHTML = `<div class="error-block"><span>⚠</span><span>Сумма ${fmt(netAfterPlayerok)} меньше минимума 1 000 ₽ для вывода в USDT.</span></div>`;
+    } else {
+      w.innerHTML = '';
+    }
+  }
+
+  // Comparison
+  setEl('cmp-sbp-val', sbpFee !== null ? fmt(sbpFee) : 'Недоступно');
+  document.getElementById('cmp-sbp-get').textContent = sbpFee !== null ? `Получите: ${fmt(sbpPayout)}` : 'Вне лимита';
+  setEl('cmp-usdt-val', usdtResult ? fmt(usdtFeeRub) : 'Недоступно');
+  document.getElementById('cmp-usdt-get').textContent = usdtResult ? `${fmtUsdt(usdtPayoutUsdt)} ≈ ${fmt(usdtPayoutRub)}` : 'Вне лимита';
+
+  const verdictEl = document.getElementById('cmp-verdict');
+  const verdictTextEl = document.getElementById('cmp-verdict-text');
+  document.getElementById('cmp-sbp').classList.remove('winner');
+  document.getElementById('cmp-usdt').classList.remove('winner');
+
+  if (sbpFee !== null && usdtResult) {
+    verdictEl.style.display = 'flex';
+    if (sbpPayout > usdtPayoutRub) {
+      document.getElementById('cmp-sbp').classList.add('winner');
+      verdictEl.className = 'success-block';
+      verdictTextEl.textContent = `СБП выгоднее на ${fmt(sbpPayout - usdtPayoutRub)} — комиссия меньше при текущем курсе USDT.`;
+    } else {
+      document.getElementById('cmp-usdt').classList.add('winner');
+      verdictEl.className = 'success-block';
+      verdictTextEl.textContent = `USDT выгоднее на ${fmt(usdtPayoutRub - sbpPayout)} при текущем курсе ${usdtRate.toFixed(2)} ₽.`;
+    }
+  } else {
+    verdictEl.style.display = 'none';
+  }
+
+  // Boost auto
+  const boostRange = getBoostRange(sale);
+  if (boostRange) {
+    const feeT = playerokFee === 10 ? '10' : '20';
+    const premP = feeT === '10' ? boostRange.prem10 : boostRange.prem20;
+    const topP = feeT === '10' ? boostRange.top10 : boostRange.top20;
+    setEl('boost-auto-range', boostRange.range);
+    document.getElementById('boost-auto-desc').textContent = `Премиум: ${premP} ₽ · Топ-1: ${topP} ₽`;
+  } else {
+    setEl('boost-auto-range', sale > 0 ? 'Вне таблицы' : '—');
+    document.getElementById('boost-auto-desc').textContent = 'Введите сумму продажи';
+  }
+
+  buildBoostTable();
+  const boostTotal = getBoostTotalCost();
+
+  // Withdrawal fee for summary
+  let withdrawalFee = 0;
+  let withdrawMethod = 'СБП';
+  if (currentTab === 'sbp' && sbpFee !== null) {
+    withdrawalFee = sbpFee;
+    withdrawMethod = 'СБП';
+  } else if (currentTab === 'usdt' && usdtResult) {
+    withdrawalFee = usdtFeeRub;
+    withdrawMethod = 'USDT (TRC20)';
+  } else if (currentTab === 'both') {
+    if (sbpFee !== null && usdtResult) {
+      if (sbpFee <= usdtFeeRub) { withdrawalFee = sbpFee; withdrawMethod = 'СБП (лучшее)'; }
+      else { withdrawalFee = usdtFeeRub; withdrawMethod = 'USDT (лучшее)'; }
+    } else if (sbpFee !== null) {
+      withdrawalFee = sbpFee; withdrawMethod = 'СБП';
+    } else if (usdtResult) {
+      withdrawalFee = usdtFeeRub; withdrawMethod = 'USDT';
+    }
+  }
+
+  const profit = sale - pfee - withdrawalFee - boostTotal - cost;
+
+  setEl('sum-sale', fmt(sale));
+  setEl('sum-pfee', fmt(pfee));
+  setEl('sum-wfee', fmt(withdrawalFee));
+  document.getElementById('sum-wmethod-label').textContent = 'Метод вывода';
+  setEl('sum-wmethod', withdrawMethod);
+  setEl('sum-boosts', fmt(boostTotal));
+  setEl('sum-cost', fmt(cost));
+
+  const profitEl = document.getElementById('sum-profit');
+  profitEl.textContent = fmt(profit);
+  profitEl.className = `amount big${profit < 0 ? ' loss' : ''}`;
+
+  const marginEl = document.getElementById('profit-margin-badge');
+  if (sale > 0) {
+    const marginPct = (profit / sale * 100).toFixed(1);
+    if (profit >= 0) {
+      marginEl.className = 'card-badge badge-green';
+      marginEl.textContent = `Маржа: ${marginPct}%`;
+    } else {
+      marginEl.className = 'card-badge badge-red';
+      marginEl.textContent = `Убыток: ${Math.abs(marginPct)}%`;
+    }
+  } else {
+    marginEl.className = 'card-badge badge-gray';
+    marginEl.textContent = '—';
+  }
+}
+
+// INIT
+buildBoostTable();
+calc();
+fetchRate();
+setInterval(fetchRate, 60000);
+</script>
+</body>
+</html>
